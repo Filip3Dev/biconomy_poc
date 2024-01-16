@@ -1,6 +1,6 @@
 "use client"
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ParticleAuthModule, ParticleProvider } from "@biconomy/particle-auth";
 import { ethers } from 'ethers';
 import { IBundler, Bundler } from "@biconomy/bundler";
@@ -26,30 +26,43 @@ export default function Home() {
   const [provider, setProvider] = useState<ethers.providers.Provider | null>(
     null,
   );
+  const [particle, setParticle] = useState<ParticleAuthModule.ParticleNetwork | null>(null);
+  const [bundler, setBundler] = useState<IBundler | null>(null);
+  const [paymaster, setPaymaster] = useState<IPaymaster | null>(null);
+  
+    useEffect(() => {
+      if (particle || bundler || paymaster) return;
+      const partic = new ParticleAuthModule.ParticleNetwork({
+        chainId: PolygonMumbai.id,
+        chainName: PolygonMumbai.name,
+        projectId: process.env.NEXT_PUBLIC_PARTICLE_ID as string,
+        clientKey: process.env.NEXT_PUBLIC_CLIENT_KEY as string,
+        appId: process.env.NEXT_PUBLIC_APP_ID as string,
+        wallet: {
+          displayWalletEntry: true,
+          defaultWalletEntryPosition: ParticleAuthModule.WalletEntryPosition.BR,
+        },
+      });
+      setParticle(partic);
+      const bund: IBundler = new Bundler({
+        bundlerUrl: process.env.NEXT_PUBLIC_BUNDLER_URL as string,
+        chainId: ChainId.POLYGON_MUMBAI,
+        entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
+      })
+      setBundler(bund);
+      const paym: IPaymaster = new BiconomyPaymaster({
+        paymasterUrl: process.env.NEXT_PUBLIC_PAYMASTER_URL as string,
+      })
+      setPaymaster(paym);
+    }, [particle, bundler, paymaster]);
 
-  const particle = new ParticleAuthModule.ParticleNetwork({
-    chainId: PolygonMumbai.id,
-    chainName: PolygonMumbai.name,
-    projectId: process.env.PROJECT_ID as string,
-    clientKey: process.env.CLIENT_KEY as string,
-    appId: process.env.APP_ID as string,
-    wallet: {
-      displayWalletEntry: true,
-      defaultWalletEntryPosition: ParticleAuthModule.WalletEntryPosition.BR,
-    },
-  });
-  const bundler: IBundler = new Bundler({
-    bundlerUrl: process.env.BUNDLER_URL as string,
-    chainId: ChainId.POLYGON_MUMBAI,
-    entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
-  })
-
-  const paymaster: IPaymaster = new BiconomyPaymaster({
-    paymasterUrl: process.env.PAYMASTER_URL as string,
-  })
 
   const connect = async () => {
     try {
+      if (loading) return;
+      if (!particle) return;
+      if (!bundler) return;
+      if (!paymaster) return;
       setLoading(true);
       const userInfo = await particle.auth.login();
       console.log("Logged in user:", userInfo);

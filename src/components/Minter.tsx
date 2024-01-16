@@ -10,8 +10,6 @@ import {
 } from "@biconomy/paymaster";
 import { BiconomySmartAccountV2 } from "@biconomy/account";
 
-const nftAddress = process.env.NFT_ADDRESS as string;
-
 interface Props {
     smartAccount: BiconomySmartAccountV2;
     address: string;
@@ -22,6 +20,8 @@ interface Props {
 const Minter: React.FC<Props> = ({ smartAccount, address, provider }) => {
     const [minted, setMinted] = useState<boolean>(false);
     const handleMint = async () => {
+        const nftAddress = process.env.NEXT_PUBLIC_NFT_ADDRESS as string;
+        console.log({nftAddress});
         const contract = new ethers.Contract(nftAddress, abi, provider);
         try {
             console.log({ address });
