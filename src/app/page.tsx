@@ -57,14 +57,92 @@ export default function Home() {
     }, [particle, bundler, paymaster]);
 
 
-  const connect = async () => {
+  const connectGoogle = async () => {
     try {
       if (loading) return;
       if (!particle) return;
       if (!bundler) return;
       if (!paymaster) return;
       setLoading(true);
-      const userInfo = await particle.auth.login();
+      const userInfo = await particle.auth.login({
+        preferredAuthType: 'google'
+      });
+      console.log("Logged in user:", userInfo);
+      const particleProvider = new ParticleProvider(particle.auth);
+      const web3Provider = new ethers.providers.Web3Provider(
+        particleProvider,
+        "any",
+      );
+      setProvider(web3Provider);
+
+      const modulez = await ECDSAOwnershipValidationModule.create({
+        signer: web3Provider.getSigner(),
+        moduleAddress: DEFAULT_ECDSA_OWNERSHIP_MODULE,
+      });
+
+      let biconomySmartAccount = await BiconomySmartAccountV2.create({
+        chainId: ChainId.POLYGON_MUMBAI,
+        bundler: bundler,
+        paymaster: paymaster,
+        entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
+        defaultValidationModule: modulez,
+        activeValidationModule: modulez,
+      });
+      setAddress(await biconomySmartAccount.getAccountAddress());
+      setSmartAccount(biconomySmartAccount);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const connectFacebook = async () => {
+    try {
+      if (loading) return;
+      if (!particle) return;
+      if (!bundler) return;
+      if (!paymaster) return;
+      setLoading(true);
+      const userInfo = await particle.auth.login({
+        preferredAuthType: 'facebook'
+      });
+      console.log("Logged in user:", userInfo);
+      const particleProvider = new ParticleProvider(particle.auth);
+      const web3Provider = new ethers.providers.Web3Provider(
+        particleProvider,
+        "any",
+      );
+      setProvider(web3Provider);
+
+      const modulez = await ECDSAOwnershipValidationModule.create({
+        signer: web3Provider.getSigner(),
+        moduleAddress: DEFAULT_ECDSA_OWNERSHIP_MODULE,
+      });
+
+      let biconomySmartAccount = await BiconomySmartAccountV2.create({
+        chainId: ChainId.POLYGON_MUMBAI,
+        bundler: bundler,
+        paymaster: paymaster,
+        entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
+        defaultValidationModule: modulez,
+        activeValidationModule: modulez,
+      });
+      setAddress(await biconomySmartAccount.getAccountAddress());
+      setSmartAccount(biconomySmartAccount);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const connectApple = async () => {
+    try {
+      if (loading) return;
+      if (!particle) return;
+      if (!bundler) return;
+      if (!paymaster) return;
+      setLoading(true);
+      const userInfo = await particle.auth.login({
+        preferredAuthType: 'apple'
+      });
       console.log("Logged in user:", userInfo);
       const particleProvider = new ParticleProvider(particle.auth);
       const web3Provider = new ethers.providers.Web3Provider(
@@ -113,7 +191,11 @@ export default function Home() {
           <br />
           <h2>Connect and Mint your AA powered NFT now</h2>
           <br />
-          {!loading && !address && <button onClick={connect}>Connect to Based Web3</button>}
+          <div className='flexButons'>
+            {!loading && !address && <button onClick={connectGoogle}>Connect with Google</button>}
+            {!loading && !address && <button onClick={connectFacebook}>Connect with Facebook</button>}
+            {!loading && !address && <button onClick={connectApple}>Connect with Apple</button>}
+          </div>
           <br />
           {loading && <p>Loading Smart Account...</p>}
           {address && <h2>Smart Account: {address}</h2>}

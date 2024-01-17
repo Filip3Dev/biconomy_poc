@@ -71,3 +71,10 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+.flexButons{
+  display: flex;
+  flex-direction: column;
+}
+.flexButons button{
+  margin-bottom: 16px;
+}
